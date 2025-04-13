@@ -25,21 +25,17 @@ export const getTask = async(req, res)=>{
 
 export const updateTask = async (req, res) => {
     const { id } = req.params;
-    
-    // Check if req.body is available
     if (!req.body) {
       return res.status(400).json({ message: "No task data provided", success: false });
     }
     
     const { title, description, status } = req.body;
     
-    // Use explicit checks so that false (a valid value) doesn't trigger an error
     if (title === undefined || description === undefined || status === undefined) {
       return res.status(400).json({ message: "Please fill all fields", success: false });
     }
     
     try {
-      // Update all necessary fields. You can include 'status' here if you want to update it.
       const task = await Task.findByIdAndUpdate(id, { title, description, status }, { new: true });
       if (!task) {
         return res.status(404).json({ message: "Task not found", success: false });
@@ -73,31 +69,17 @@ export const updateStatus = async (req, res) => {
     const { status } = req.body;
 
     if (status === undefined) {
-        return res.status(400).json({ 
-            success: false,
-            message: "Status field required" 
-        });
+        return res.status(400).json({message: "Please provide the status", success: false});
     }
 
     try {
-        const task = await Task.findByIdAndUpdate(
-            id,
-            { 
-                status: typeof status === 'string' 
-                    ? status.toLowerCase() === 'true'
-                    : Boolean(status)
-            },
-            { new: true, runValidators: true }
-        );
+        const updatedTask = await Task.findByIdAndUpdate(id,{ status });
+        if (!updatedTask) {
+            return res.status(404).json({message: "Task not found", success: false});
+        }
 
-        return task 
-            ? res.json({ success: true, data: task })
-            : res.status(404).json({ success: false, message: "Task not found" });
-
+        return res.status(201).json({message: "Status updated successfully", success: true, data: updatedTask});
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: error.message || "Server error"
-        });
+        return res.status(500).json({message: "Internal server error", success: false});
     }
 };
